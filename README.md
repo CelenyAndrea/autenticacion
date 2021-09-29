@@ -1,4 +1,4 @@
-Aplicación simple para registro, inicio de sesión y reset de contraseña.
+Aplicación simple de registro, inicio de sesión y reset de contraseña.
 
 ## Installation
 
