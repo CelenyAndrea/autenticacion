@@ -1,9 +1,8 @@
-Aplicación simple de registro, inicio de sesión y reset de contraseña.
+Aplicación simple de registro, inicio de sesión y reset de contraseña utilizando Json Web Token con express y momgodb.
 
-## Installation
+## Instalacion
 
 ```
 npm i
 npm run build
-npm start
 ```

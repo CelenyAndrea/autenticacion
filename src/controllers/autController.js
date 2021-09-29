@@ -4,8 +4,10 @@ const router = Router();
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const config = require('../config');
+const verifyToken = require('./verifyToken');
 
-router.post('/signup', async (req, res, next) => {
+
+router.post('/signup', async (req, res) => {
     const { username, email, password } = req.body;
     const user = new User ({
         username,
@@ -24,17 +26,9 @@ router.post('/signup', async (req, res, next) => {
 })
 
 
-router.get('/profile', async (req, res, next) => {
-    const token = req.headers['x-access-token'];
-    if(!token) {
-        return res.status(401).json({
-            auth: false,
-            message: 'No token provided'
-        })
-    }
-    const decoded = jwt.verify(token, config.secret);
-    //console.log(decoded);
-    const user = await User.findById(decoded.id, { password: 0 });
+router.get('/profile', verifyToken, async (req, res) => {
+
+    const user = await User.findById(req.userId, { password: 0 });
     if(!user) {
         return res.status(404).send('No user found')
     }
@@ -42,12 +36,26 @@ router.get('/profile', async (req, res, next) => {
 })
 
 
-router.post('/login', (req, res, next) => {
+router.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+        return res.status(404).send("The email doesn't exists");
+    }
+    const passValid = await user.validatePassword(password);
+    if (!passValid) {
+        return res.status(401).json({auth: false, token: null});
+    }
 
+    const token = jwt.sign({id: user._id}, config.secret, {
+        expiresIn: 60 * 60 * 24
+    });
+
+    res.json({ auth: true, token });
 })
 
 
-router.put('/restorepassword', async (req, res, next) => {
+router.put('/restorepassword', verifyToken, async (req, res) => {
     try {
         if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{10,}$/.test(req.body.password)) {
             return res.json({
